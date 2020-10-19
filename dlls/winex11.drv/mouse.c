@@ -293,6 +293,12 @@ void enable_xinput2_touch(struct x11drv_win_data *win_data)
     XIEventMask mask;
     unsigned char mask_bits[XIMaskLen(XI_LASTEVENT)];
     int major = 2, minor = 2;
+    HKEY key;
+    DWORD newkey;
+    int num_touches = 0;
+    XIDeviceInfo *pointer_info;
+    int count;
+    int i;
 
     if (pXIQueryVersion( win_data->display, &major, &minor ))
     {
@@ -309,6 +315,33 @@ void enable_xinput2_touch(struct x11drv_win_data *win_data)
     XISetMask( mask_bits, XI_TouchEnd );
 
     pXISelectEvents( win_data->display, win_data->client_window, &mask, 1 );
+
+    /* we assume only one device can send touches */
+    pointer_info = pXIQueryDevice( win_data->display, XIAllDevices, &count );
+    for (i = 0; i < count; i++)
+    {
+        XIAnyClassInfo **classes = pointer_info[i].classes;
+        int num_classes = pointer_info[i].num_classes;
+        int j;
+        for (j = 0; j < num_classes; j++)
+        {
+            if (classes[j]->type == XITouchClass)
+            {
+                num_touches = ((XITouchClassInfo *)classes[j])->num_touches;
+                goto out;
+            }
+        }
+    }
+out:
+    pXIFreeDeviceInfo( pointer_info );
+
+    if (RegCreateKeyExA( HKEY_CURRENT_USER, "Software\\Wine\\Drivers\\Touch", 0, NULL,
+                REG_OPTION_VOLATILE, KEY_ALL_ACCESS, NULL, &key, &newkey ) == ERROR_SUCCESS)
+    {
+        if (newkey == REG_CREATED_NEW_KEY)
+            RegSetValueExA( key, "MaximumTouches", 0, REG_DWORD, (BYTE *)&num_touches, sizeof(num_touches) );
+        RegCloseKey( key );
+    }
 #endif
 }
 

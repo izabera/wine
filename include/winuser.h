@@ -1063,6 +1063,8 @@ WINUSERAPI BOOL     WINAPI SetSysColors(INT,const INT*,const COLORREF*);
 #define SM_CMETRICS           90
 #define SM_MOUSEHORIZONTALWHEELPRESENT 91
 #define SM_CXPADDEDBORDER     92
+#define SM_DIGITIZER          94
+#define SM_MAXIMUMTOUCHES     95
 
 #define SM_REMOTESESSION        0x1000
 #define SM_SHUTTINGDOWN         0x2000

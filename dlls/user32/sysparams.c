@@ -2731,6 +2731,28 @@ INT WINAPI GetSystemMetrics( INT index )
         return 0;
     case SM_CMETRICS:
         return SM_CMETRICS;
+    case SM_DIGITIZER:
+        return 1; /* TODO */
+#if 0
+        if (RegGetValueA( HKEY_CURRENT_USER,
+                    "Software\\Wine\\Drivers\\Touch", "MaximumTouches",
+                    RRF_RT_REG_DWORD, NULL, NULL, NULL ) == ERROR_SUCCESS)
+            return 1;
+        return 0;
+#endif
+    case SM_MAXIMUMTOUCHES:
+        return 10; /* TODO */
+#if 0
+    {
+        DWORD size;
+        DWORD num_touches;
+        if (RegGetValueA( HKEY_CURRENT_USER,
+                    "Software\\Wine\\Drivers\\Touch", "MaximumTouches",
+                    RRF_RT_REG_DWORD, NULL, &num_touches, &size ) == ERROR_SUCCESS)
+            return num_touches;
+        return 0;
+    }
+#endif
     default:
         return 0;
     }
