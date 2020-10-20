@@ -2465,8 +2465,8 @@ static BOOL process_mouse_message( MSG *msg, UINT hw_id, ULONG_PTR extra_info, H
         BOOL update = remove;
 
         /* translate double clicks -
-	 * note that ...MOUSEMOVEs can slip in between
-	 * ...BUTTONDOWN and ...BUTTONDBLCLK messages */
+         * note that ...MOUSEMOVEs can slip in between
+         * ...BUTTONDOWN and ...BUTTONDBLCLK messages */
 
         if ((info.flags & (GUI_INMENUMODE|GUI_INMOVESIZE)) ||
             hittest != HTCLIENT ||
