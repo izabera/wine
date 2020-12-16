@@ -4177,9 +4177,45 @@ BOOL WINAPI CloseTouchInputHandle(HTOUCHINPUT handle)
  */
 BOOL WINAPI GetTouchInputInfo(HTOUCHINPUT handle, UINT count, TOUCHINPUT *ptr, int size)
 {
-    FIXME("(%p %u %p %u): stub\n", handle, count, ptr, size);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    struct user_thread_info *thread_info = get_user_thread_info();
+
+    struct touchinput_data *head = thread_info->touchinput;
+    struct touchinput_data **p;
+
+    if (!handle)
+    {
+        SetLastError( ERROR_INVALID_HANDLE );
+        return 0;
+    }
+
+    for (p = &head; *p; p = &(*p)->next)
+    {
+        if ((HTOUCHINPUT)*p == handle)
+            goto found;
+    }
+    SetLastError( ERROR_INVALID_HANDLE );
+    return 0;
+
+found:
+
+    if (size != sizeof(TOUCHINPUT))
+    {
+        WARN( "Invalid structure size %u.\n", size );
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+
+    if (!ptr)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+
+    if (!count)
+        return 1;
+
+    memcpy( ptr, &(*p)->t, size );
+    return 1;
 }
 
 /*****************************************************************************
