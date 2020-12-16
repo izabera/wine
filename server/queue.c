@@ -1553,7 +1553,7 @@ static void queue_hardware_message( struct desktop *desktop, struct message *msg
         if (msg->wparam == VK_SHIFT || msg->wparam == VK_LSHIFT || msg->wparam == VK_RSHIFT)
             msg->lparam &= ~(KF_EXTENDED << 16);
     }
-    else if (msg->msg != WM_INPUT)
+    else if (msg->msg != WM_INPUT && msg->msg != WM_TOUCH)
     {
         if (msg->msg == WM_MOUSEMOVE)
         {
