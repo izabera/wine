@@ -2007,6 +2007,25 @@ static int check_hw_message_filter( user_handle_t win, unsigned int msg_code,
     }
 }
 
+/* queue a hardware message for a touch event */
+static void queue_touch_message( struct desktop *desktop, user_handle_t win, const hw_input_t *input,
+                                unsigned int origin, struct msg_queue *sender )
+{
+    struct hw_msg_source source = { IMDT_UNAVAILABLE, origin };
+    struct message *msg;
+
+    if (!(msg = alloc_hardware_message( 0, source, get_tick_count() ))) return;
+
+    msg->win       = get_user_full_handle( win );
+    msg->msg       = WM_TOUCH;
+    msg->wparam    = input->touch.id;
+    msg->lparam    = input->touch.flags;
+    msg->x         = input->touch.x;
+    msg->y         = input->touch.y;
+    msg->time      = input->touch.time;
+
+    queue_hardware_message( desktop, msg, 0x3 );
+}
 
 /* find a hardware message for the given queue */
 static int get_hardware_message( struct thread *thread, unsigned int hw_id, user_handle_t filter_win,
@@ -2483,6 +2502,9 @@ DECL_HANDLER(send_hardware_message)
         break;
     case INPUT_KEYBOARD:
         reply->wait = queue_keyboard_message( desktop, req->win, &req->input, origin, sender );
+        break;
+    case /* INPUT_TOUCH */ 0xface:
+        queue_touch_message( desktop, req->win, &req->input, origin, sender );
         break;
     case INPUT_HARDWARE:
         queue_custom_hardware_message( desktop, req->win, origin, &req->input );
