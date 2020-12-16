@@ -4151,9 +4151,8 @@ LONG_PTR WINAPI SetWindowLongPtrA( HWND hwnd, INT offset, LONG_PTR newval )
  */
 BOOL WINAPI RegisterTouchWindow(HWND hwnd, ULONG flags)
 {
-    FIXME("(%p %08x): stub\n", hwnd, flags);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    win_set_flags( hwnd, WIN_HAS_TOUCH, 0 );
+    return TRUE;
 }
 
 /*****************************************************************************
@@ -4161,9 +4160,8 @@ BOOL WINAPI RegisterTouchWindow(HWND hwnd, ULONG flags)
  */
 BOOL WINAPI UnregisterTouchWindow(HWND hwnd)
 {
-    FIXME("(%p): stub\n", hwnd);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    win_set_flags( hwnd, 0, WIN_HAS_TOUCH );
+    return TRUE;
 }
 
 /*****************************************************************************
@@ -4171,9 +4169,7 @@ BOOL WINAPI UnregisterTouchWindow(HWND hwnd)
  */
 BOOL WINAPI CloseTouchInputHandle(HTOUCHINPUT handle)
 {
-    FIXME("(%p): stub\n", handle);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    return TRUE;
 }
 
 /*****************************************************************************

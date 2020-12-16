@@ -28,6 +28,7 @@
 #include "winbase.h"
 #include "wingdi.h"
 #include "controls.h"
+#include "win.h"
 #include "user_private.h"
 
 #include "wine/debug.h"
@@ -465,8 +466,7 @@ BOOL WINAPI SetGestureConfig( HWND hwnd, DWORD reserved, UINT id, PGESTURECONFIG
  */
 BOOL WINAPI IsTouchWindow( HWND hwnd, PULONG flags )
 {
-    FIXME("(%p %p): stub\n", hwnd, flags);
-    return FALSE;
+    return !! (win_set_flags( hwnd, 0, 0 ) & WIN_HAS_TOUCH);
 }
 
 /**********************************************************************
