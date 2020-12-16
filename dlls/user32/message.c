@@ -2291,6 +2291,81 @@ static BOOL process_rawinput_message( MSG *msg, UINT hw_id, const struct hardwar
     return TRUE;
 }
 
+static BOOL process_touch_message( MSG *msg, UINT hw_id, BOOL remove )
+{
+    struct user_thread_info *thread_info = get_user_thread_info();
+
+    msg->pt = point_phys_to_win_dpi( msg->hwnd, msg->pt );
+    if (IsTouchWindow( msg->hwnd, 0 ))
+    {
+        struct touchinput_data *touch_data = HeapAlloc( GetProcessHeap(),
+                HEAP_ZERO_MEMORY, sizeof(struct touchinput_data) );
+
+        touch_data->next = thread_info->touchinput;
+        thread_info->touchinput = touch_data;
+
+        touch_data->t.x = msg->pt.x * 100;
+        touch_data->t.y = msg->pt.y * 100;
+        touch_data->t.dwID = msg->wParam;
+        touch_data->t.dwFlags = msg->lParam;
+        touch_data->t.dwTime = msg->time;
+
+        msg->wParam = 1;
+        msg->lParam = (LPARAM)touch_data;
+    }
+    else
+    {
+        struct gestureinfo_data *gesture_data = HeapAlloc( GetProcessHeap(),
+                HEAP_ZERO_MEMORY, sizeof(struct gestureinfo_data) );
+
+        gesture_data->next = thread_info->gestureinfo;
+        thread_info->gestureinfo = gesture_data;
+
+        gesture_data->g.hwndTarget = msg->hwnd;
+        gesture_data->g.ptsLocation.x = msg->pt.x;
+        gesture_data->g.ptsLocation.y = msg->pt.y;
+
+        switch (thread_info->gesture_state)
+        {
+            case GID_BEGIN:
+                /* TODO: detect change of state here */
+                /* FALLTHROUGH */
+            case GID_ZOOM:
+            case GID_PAN:
+            case GID_ROTATE:
+            case GID_TWOFINGERTAP:
+            case GID_PRESSANDTAP:
+                if (msg->lParam & TOUCHEVENTF_UP && ! --(thread_info->finger_count))
+                {
+                    thread_info->gesture_state = GID_END;
+                    gesture_data->g.dwFlags = GF_END;
+                }
+                else
+                    gesture_data->g.dwFlags = GF_INERTIA;
+
+                if (msg->lParam & TOUCHEVENTF_DOWN)
+                    thread_info->finger_count++;
+                break;
+
+            default: /* 0 */
+                thread_info->gesture_state = GID_BEGIN;
+                gesture_data->g.dwFlags = GF_BEGIN;
+                thread_info->finger_count++;
+        }
+        gesture_data->g.dwID = thread_info->gesture_state;
+
+        if (thread_info->gesture_state == GID_PRESSANDTAP)
+            gesture_data->g.ullArguments = 0 /* TODO: distance between fingers << 32 */;
+
+        msg->wParam = gesture_data->g.ullArguments;
+        msg->lParam = (LPARAM)gesture_data;
+        msg->message = WM_GESTURE;
+    }
+
+    if (remove) accept_hardware_message( hw_id );
+    return TRUE;
+}
+
 /***********************************************************************
  *          process_keyboard_message
  *
@@ -2608,6 +2683,8 @@ static BOOL process_hardware_message( MSG *msg, UINT hw_id, const struct hardwar
 
     if (msg->message == WM_INPUT)
         ret = process_rawinput_message( msg, hw_id, msg_data );
+    else if (msg->message == WM_TOUCH)
+        ret = process_touch_message( msg, hw_id, remove );
     else if (is_keyboard_message( msg->message ))
         ret = process_keyboard_message( msg, hw_id, hwnd_filter, first, last, remove );
     else if (is_mouse_message( msg->message ))

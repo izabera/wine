@@ -674,6 +674,10 @@ typedef struct tagGESTURECONFIG {
 #define GID_PRESSANDTAP                        7
 #define GID_ROLLOVER                           GID_PRESSANDTAP
 
+#define GF_BEGIN                               1
+#define GF_INERTIA                             2
+#define GF_END                                 4
+
 #if (_WIN32_WINNT >= 0x0601)
 #define GET_DEVICE_CHANGE_WPARAM(wParam) (LOWORD(wParam))
 #elif (_WIN32_WINNT >= 0x0501)

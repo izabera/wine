@@ -178,6 +178,18 @@ struct rawinput_thread_data
     RAWINPUT buffer[1]; /* rawinput message data buffer */
 };
 
+struct touchinput_data
+{
+    TOUCHINPUT t; /* touchinput message data buffer */
+    struct touchinput_data *next;
+};
+
+struct gestureinfo_data
+{
+    GESTUREINFO g; /* gestureinfo message data buffer */
+    struct gestureinfo_data *next;
+};
+
 /* this is the structure stored in TEB->Win32ClientInfo */
 /* no attempt is made to keep the layout compatible with the Windows one */
 struct user_thread_info
@@ -202,6 +214,10 @@ struct user_thread_info
     HWND                          top_window;             /* Desktop window */
     HWND                          msg_window;             /* HWND_MESSAGE parent window */
     struct rawinput_thread_data  *rawinput;               /* RawInput thread local data / buffer */
+    struct touchinput_data       *touchinput;             /* TouchInput data / buffer */
+    struct gestureinfo_data      *gestureinfo;            /* GestureInfo data / buffer */
+    DWORD                         gesture_state;
+    DWORD                         finger_count;
 };
 
 C_ASSERT( sizeof(struct user_thread_info) <= sizeof(((TEB *)0)->Win32ClientInfo) );
