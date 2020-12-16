@@ -4411,6 +4411,7 @@ WORD        WINAPI SYSTEM_KillSystemTimer( WORD );
 
 #ifdef __WINESRC__
 WINUSERAPI BOOL CDECL __wine_send_input( HWND hwnd, const INPUT *input );
+WINUSERAPI BOOL CDECL __wine_send_touch( HWND hwnd, const TOUCHINPUT *touch );
 #endif
 
 #ifdef __cplusplus

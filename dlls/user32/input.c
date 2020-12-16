@@ -126,6 +126,13 @@ BOOL CDECL __wine_send_input( HWND hwnd, const INPUT *input )
     return !status;
 }
 
+BOOL CDECL __wine_send_touch( HWND hwnd, const TOUCHINPUT *touch )
+{
+    NTSTATUS status = send_touch_message( hwnd, touch, 0 );
+    if (status) SetLastError( RtlNtStatusToDosError(status) );
+    return !status;
+}
+
 
 /***********************************************************************
  *		update_mouse_coords
