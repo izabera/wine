@@ -528,6 +528,8 @@ extern BOOL X11DRV_GenericEvent( HWND hwnd, XEvent *event ) DECLSPEC_HIDDEN;
 extern int xinput2_opcode DECLSPEC_HIDDEN;
 extern Bool (*pXGetEventData)( Display *display, XEvent /*XGenericEventCookie*/ *event ) DECLSPEC_HIDDEN;
 extern void (*pXFreeEventData)( Display *display, XEvent /*XGenericEventCookie*/ *event ) DECLSPEC_HIDDEN;
+struct x11drv_win_data;
+extern void enable_xinput2_touch(struct x11drv_win_data *win_data);
 
 extern DWORD EVENT_x11_time_to_win32_time(Time time) DECLSPEC_HIDDEN;
 
@@ -583,6 +585,8 @@ struct x11drv_win_data
     Pixmap         icon_mask;
     unsigned long *icon_bits;
     unsigned int   icon_size;
+    int      touch_primary;        /* id of the primary finger */
+    int      touch_fingercount;    /* active finger count */
 };
 
 extern struct x11drv_win_data *get_win_data( HWND hwnd ) DECLSPEC_HIDDEN;

@@ -1886,6 +1886,8 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
     POINT pt;
     Window window = event->child;
     struct x11drv_thread_data *thread_data = x11drv_thread_data();
+    struct x11drv_win_data *win_data;
+    int primary;
 
     if (!thread_data->xi2_core_pointer)
     {
@@ -1904,18 +1906,34 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
     touch.hSource = 0; /* TODO */
     touch.dwID = event->detail;
 
+    win_data = get_win_data( hwnd );
+    if (!win_data)
+    {
+        FIXME("can't get win data\n");
+        return FALSE;
+    }
+
     switch (event->evtype)
     {
     case XI_TouchBegin:
         touch.dwFlags = TOUCHEVENTF_DOWN | TOUCHEVENTF_INRANGE;
+        if (!win_data->touch_fingercount++)
+            win_data->touch_primary = touch.dwID;
         break;
     case XI_TouchUpdate:
         touch.dwFlags = TOUCHEVENTF_MOVE | TOUCHEVENTF_INRANGE;
         break;
     case XI_TouchEnd:
         touch.dwFlags = TOUCHEVENTF_UP;
+        win_data->touch_fingercount--;
         break;
     }
+
+    primary = win_data->touch_primary;
+    release_win_data( win_data );
+
+    if (primary == touch.dwID)
+        touch.dwFlags |= TOUCHEVENTF_PRIMARY;
 
     touch.dwMask = TOUCHINPUTMASKF_TIMEFROMSYSTEM;
     touch.dwTime = EVENT_x11_time_to_win32_time( event->time );
