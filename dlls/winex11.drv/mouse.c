@@ -1876,6 +1876,75 @@ static BOOL X11DRV_RawMotion( XGenericEventCookie *xev )
     return TRUE;
 }
 
+/***********************************************************************
+ *           X11DRV_Touch
+ */
+static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
+{
+    XIDeviceEvent *event = xev->data;
+    TOUCHINPUT touch = { 0 };
+    POINT pt;
+    Window window = event->child;
+    struct x11drv_thread_data *thread_data = x11drv_thread_data();
+
+    if (!thread_data->xi2_core_pointer)
+    {
+        if (!pXIGetClientPointer( thread_data->display, None, &thread_data->xi2_core_pointer ))
+        {
+            FIXME("can't get core pointer\n");
+            return FALSE;
+        }
+    }
+
+    if (event->deviceid == thread_data->xi2_core_pointer)
+        return FALSE;
+
+    touch.x = event->root_x;
+    touch.y = event->root_y;
+    touch.hSource = 0; /* TODO */
+    touch.dwID = event->detail;
+
+    switch (event->evtype)
+    {
+    case XI_TouchBegin:
+        touch.dwFlags = TOUCHEVENTF_DOWN | TOUCHEVENTF_INRANGE;
+        break;
+    case XI_TouchUpdate:
+        touch.dwFlags = TOUCHEVENTF_MOVE | TOUCHEVENTF_INRANGE;
+        break;
+    case XI_TouchEnd:
+        touch.dwFlags = TOUCHEVENTF_UP;
+        break;
+    }
+
+    touch.dwMask = TOUCHINPUTMASKF_TIMEFROMSYSTEM;
+    touch.dwTime = EVENT_x11_time_to_win32_time( event->time );
+
+    if (!hwnd)
+    {
+        HWND clip_hwnd = thread_data->clip_hwnd;
+
+        if (!clip_hwnd) return FALSE;
+        if (thread_data->clip_window != window) return FALSE;
+        touch.x += clip_rect.left;
+        touch.y += clip_rect.top;
+        __wine_send_touch( hwnd, &touch );
+        return TRUE;
+    }
+
+    if (window == root_window)
+    {
+        POINT pt = root_to_virtual_screen( touch.x, touch.y );
+        touch.x = pt.x;
+        touch.y = pt.y;
+    }
+
+    touch.x = pt.x;
+    touch.y = pt.y;
+    __wine_send_touch( hwnd, &touch );
+    return TRUE;
+}
+
 #endif /* HAVE_X11_EXTENSIONS_XINPUT2_H */
 
 
@@ -1939,6 +2008,11 @@ BOOL X11DRV_GenericEvent( HWND hwnd, XEvent *xev )
         break;
     case XI_RawMotion:
         ret = X11DRV_RawMotion( event );
+        break;
+    case XI_TouchBegin:
+    case XI_TouchEnd:
+    case XI_TouchUpdate:
+        ret = X11DRV_Touch( hwnd, event );
         break;
 
     default:
