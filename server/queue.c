@@ -1568,8 +1568,11 @@ static void queue_hardware_message( struct desktop *desktop, struct message *msg
         if (desktop->keystate[VK_XBUTTON1] & 0x80) msg->wparam |= MK_XBUTTON1;
         if (desktop->keystate[VK_XBUTTON2] & 0x80) msg->wparam |= MK_XBUTTON2;
     }
-    msg->x = desktop->cursor.x;
-    msg->y = desktop->cursor.y;
+    if (msg->msg != WM_TOUCH)
+    {
+        msg->x = desktop->cursor.x;
+        msg->y = desktop->cursor.y;
+    }
 
     if (msg->win && (thread = get_window_thread( msg->win )))
     {
