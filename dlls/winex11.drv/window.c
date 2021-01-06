@@ -1522,6 +1522,7 @@ Window create_client_window( HWND hwnd, const XVisualInfo *visual )
         XSync( gdi_display, False );
         if (data->whole_window) XSelectInput( data->display, data->client_window, ExposureMask );
         TRACE( "%p xwin %lx/%lx\n", data->hwnd, data->whole_window, data->client_window );
+        enable_xinput2_touch(data);
     }
     release_win_data( data );
     return ret;

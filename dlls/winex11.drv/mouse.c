@@ -286,6 +286,32 @@ static void update_relative_valuators(XIAnyClassInfo **valuators, int n_valuator
 #endif
 
 
+void enable_xinput2_touch(struct x11drv_win_data *win_data)
+{
+#ifdef HAVE_X11_EXTENSIONS_XINPUT2_H
+
+    XIEventMask mask;
+    unsigned char mask_bits[XIMaskLen(XI_LASTEVENT)];
+    int major = 2, minor = 2;
+
+    if (pXIQueryVersion( win_data->display, &major, &minor ))
+    {
+        WARN( "X Input 2 not available\n" );
+        return;
+    }
+
+    mask.mask     = mask_bits;
+    mask.mask_len = sizeof(mask_bits);
+    mask.deviceid = XIAllDevices;
+    memset( mask_bits, 0, sizeof(mask_bits) );
+    XISetMask( mask_bits, XI_TouchBegin );
+    XISetMask( mask_bits, XI_TouchUpdate );
+    XISetMask( mask_bits, XI_TouchEnd );
+
+    pXISelectEvents( win_data->display, win_data->client_window, &mask, 1 );
+#endif
+}
+
 /***********************************************************************
  *              enable_xinput2
  */
