@@ -1909,7 +1909,7 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
 {
     XIDeviceEvent *event = xev->data;
     TOUCHINPUT touch = { 0 };
-    POINT pt;
+    INPUT mouseclick = { 0 };
     Window window = event->child;
     struct x11drv_thread_data *thread_data = x11drv_thread_data();
     struct x11drv_win_data *win_data;
@@ -1949,6 +1949,7 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
     {
     case XI_TouchBegin:
         touch.dwFlags = TOUCHEVENTF_DOWN | TOUCHEVENTF_INRANGE;
+        mouseclick.u.mi.dwFlags = MOUSEEVENTF_LEFTDOWN;
         if (!win_data->touch_fingercount++)
             win_data->touch_primary = touch.dwID;
         break;
@@ -1957,6 +1958,7 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
         break;
     case XI_TouchEnd:
         touch.dwFlags = TOUCHEVENTF_UP;
+        mouseclick.u.mi.dwFlags = MOUSEEVENTF_LEFTUP;
         win_data->touch_fingercount--;
         break;
     }
@@ -1970,6 +1972,9 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
     touch.dwMask = TOUCHINPUTMASKF_TIMEFROMSYSTEM;
     touch.dwTime = EVENT_x11_time_to_win32_time( event->time );
 
+    mouseclick.u.mi.time = touch.dwTime;
+    mouseclick.u.mi.dwFlags |= MOUSEEVENTF_ABSOLUTE | MOUSEEVENTF_MOVE;
+
     if (!hwnd)
     {
         HWND clip_hwnd = thread_data->clip_hwnd;
@@ -1978,6 +1983,13 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
         if (thread_data->clip_window != window) return FALSE;
         touch.x += clip_rect.left;
         touch.y += clip_rect.top;
+        mouseclick.u.mi.dx = touch.x;
+        mouseclick.u.mi.dy = touch.y;
+
+        /* due to the events we get from xi2, we need to synthesize a mouse click ourselves */
+        if (primary == touch.dwID)
+            send_mouse_input( hwnd, window, 0, &mouseclick );
+
         __wine_send_touch( hwnd, &touch );
         return TRUE;
     }
@@ -1989,8 +2001,11 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
         touch.y = pt.y;
     }
 
-    touch.x = pt.x;
-    touch.y = pt.y;
+    mouseclick.u.mi.dx = touch.x;
+    mouseclick.u.mi.dy = touch.y;
+
+    if (primary == touch.dwID)
+        send_mouse_input( hwnd, window, 0, &mouseclick );
     __wine_send_touch( hwnd, &touch );
     return TRUE;
 }
