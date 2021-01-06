@@ -1889,6 +1889,12 @@ static BOOL X11DRV_Touch( HWND hwnd, XGenericEventCookie *xev )
     struct x11drv_win_data *win_data;
     int primary;
 
+    /* we've been passed a bogus hwnd because event->xany.window overlapped the
+     * wrong field of the union, so we need to get it ourselves */
+    if (XFindContext( event->display, window, winContext, (char **)&hwnd ) != 0)
+        hwnd = 0;
+    if (!hwnd && window == root_window) hwnd = GetDesktopWindow();
+
     if (!thread_data->xi2_core_pointer)
     {
         if (!pXIGetClientPointer( thread_data->display, None, &thread_data->xi2_core_pointer ))
