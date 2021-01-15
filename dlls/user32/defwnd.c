@@ -739,6 +739,13 @@ static LRESULT DEFWND_DefWinProc( HWND hwnd, UINT msg, WPARAM wParam, LPARAM lPa
             break;
         }
 
+    case WM_TOUCH:
+        CloseTouchInputHandle((HTOUCHINPUT)lParam);
+        break;
+
+    case WM_GESTURE:
+        CloseGestureInfoHandle((HGESTUREINFO)lParam);
+        break;
     }
 
     return 0;
