@@ -3219,6 +3219,66 @@ static BOOL send_message( struct send_message_info *info, DWORD_PTR *res_ptr, BO
 
 
 /***********************************************************************
+ *		send_touch_message
+ */
+NTSTATUS send_touch_message( HWND hwnd, const TOUCHINPUT *touch, UINT flags )
+{
+    struct user_key_state_info *key_state_info = get_user_thread_info()->key_state;
+    struct send_message_info info;
+    int prev_x, prev_y, new_x, new_y;
+    INT counter = global_key_state_counter;
+    NTSTATUS ret;
+    BOOL wait;
+
+    info.type     = MSG_HARDWARE;
+    info.dest_tid = 0;
+    info.hwnd     = hwnd;
+    info.flags    = 0;
+    info.timeout  = 0;
+
+    SERVER_START_REQ( send_hardware_message )
+    {
+        req->win        = wine_server_user_handle( hwnd );
+        req->flags      = flags;
+        req->input.type = /* touch my */ 0xface;
+        req->input.touch.x      = touch->x;
+        req->input.touch.y      = touch->y;
+        req->input.touch.id     = touch->dwID;
+        req->input.touch.flags  = touch->dwFlags;
+        req->input.touch.mask   = touch->dwMask;
+        req->input.touch.time   = touch->dwTime;
+        if (key_state_info) wine_server_set_reply( req, key_state_info->state,
+                                                   sizeof(key_state_info->state) );
+        ret = wine_server_call( req );
+        wait = reply->wait;
+        prev_x = reply->prev_x;
+        prev_y = reply->prev_y;
+        new_x  = reply->new_x;
+        new_y  = reply->new_y;
+    }
+    SERVER_END_REQ;
+
+    if (!ret)
+    {
+        if (key_state_info)
+        {
+            key_state_info->time    = GetTickCount();
+            key_state_info->counter = counter;
+        }
+        if ((flags & SEND_HWMSG_INJECTED) && (prev_x != new_x || prev_y != new_y))
+            USER_Driver->pSetCursorPos( new_x, new_y );
+    }
+
+    if (wait)
+    {
+        LRESULT ignored;
+        wait_message_reply( 0 );
+        retrieve_reply( &info, 0, &ignored );
+    }
+    return ret;
+}
+
+/***********************************************************************
  *		send_hardware_message
  */
 NTSTATUS send_hardware_message( HWND hwnd, const INPUT *input, UINT flags )
