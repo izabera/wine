@@ -343,6 +343,21 @@ typedef union
     } mouse;
     struct
     {
+
+        int            type;
+        int            x;
+        int            y;
+
+        unsigned int   id;
+        unsigned int   flags;
+        unsigned int   mask;
+        unsigned int   time;
+
+
+
+    } touch;
+    struct
+    {
         int            type;
         unsigned int   msg;
         lparam_t       lparam;
@@ -6188,7 +6203,7 @@ union generic_reply
 
 /* ### protocol_version begin ### */
 
-#define SERVER_PROTOCOL_VERSION 652
+#define SERVER_PROTOCOL_VERSION 653
 
 /* ### protocol_version end ### */
 

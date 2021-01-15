@@ -359,6 +359,21 @@ typedef union
     } mouse;
     struct
     {
+        /* not all fields from TOUCHINPUT fit in the union */
+        int            type;
+        int            x;
+        int            y;
+     /* void          *source; */
+        unsigned int   id;
+        unsigned int   flags;
+        unsigned int   mask;
+        unsigned int   time;
+     /* void          *extra; */
+     /* unsigned int   cx; */
+     /* unsigned int   cy; */
+    } touch;
+    struct
+    {
         int            type;    /* INPUT_HARDWARE */
         unsigned int   msg;     /* message code */
         lparam_t       lparam;  /* message param */
