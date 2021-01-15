@@ -4169,7 +4169,28 @@ BOOL WINAPI UnregisterTouchWindow(HWND hwnd)
  */
 BOOL WINAPI CloseTouchInputHandle(HTOUCHINPUT handle)
 {
-    return TRUE;
+    struct user_thread_info *thread_info = get_user_thread_info();
+
+    struct touchinput_data *head = thread_info->touchinput;
+    struct touchinput_data **p;
+
+    if (!handle)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    for (p = &head; *p; p = &(*p)->next)
+    {
+        if ((HTOUCHINPUT)*p == handle)
+        {
+            *p = (*p)->next;
+            HeapFree( GetProcessHeap(), 0, handle );
+            return TRUE;
+        }
+    }
+
+    return 0;
 }
 
 /*****************************************************************************
