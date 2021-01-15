@@ -4244,9 +4244,35 @@ found:
  */
 BOOL WINAPI GetGestureInfo(HGESTUREINFO handle, PGESTUREINFO ptr)
 {
-    FIXME("(%p %p): stub\n", handle, ptr);
-    SetLastError(ERROR_CALL_NOT_IMPLEMENTED);
-    return FALSE;
+    struct user_thread_info *thread_info = get_user_thread_info();
+
+    struct gestureinfo_data *head = thread_info->gestureinfo;
+    struct gestureinfo_data **p;
+
+    if (!handle)
+    {
+        SetLastError( ERROR_INVALID_HANDLE );
+        return 0;
+    }
+
+    for (p = &head; *p; p = &(*p)->next)
+    {
+        if ((HGESTUREINFO)*p == handle)
+            goto found;
+    }
+    SetLastError( ERROR_INVALID_HANDLE );
+    return 0;
+
+found:
+
+    if (!ptr)
+    {
+        SetLastError( ERROR_INVALID_PARAMETER );
+        return 0;
+    }
+
+    memcpy( ptr, &(*p)->g, sizeof(GESTUREINFO) );
+    return 1;
 }
 
 /*****************************************************************************
