@@ -3605,6 +3605,7 @@ WINUSERAPI BOOL        WINAPI ClipCursor(const RECT*);
 WINUSERAPI BOOL        WINAPI CloseClipboard(void);
 WINUSERAPI BOOL        WINAPI CloseDesktop(HDESK);
 WINUSERAPI BOOL        WINAPI CloseTouchInputHandle(HTOUCHINPUT);
+WINUSERAPI BOOL        WINAPI CloseGestureInfoHandle(HGESTUREINFO);
 WINUSERAPI BOOL        WINAPI CloseWindow(HWND);
 WINUSERAPI BOOL        WINAPI CloseWindowStation(HWINSTA);
 WINUSERAPI INT         WINAPI CopyAcceleratorTableA(HACCEL,LPACCEL,INT);

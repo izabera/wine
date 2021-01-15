@@ -76,6 +76,7 @@
 @ stdcall CloseClipboard()
 @ stdcall CloseDesktop(long)
 @ stdcall CloseTouchInputHandle(long)
+@ stdcall CloseGestureInfoHandle(long)
 @ stdcall CloseWindow(long)
 @ stdcall CloseWindowStation(long)
 @ stdcall CopyAcceleratorTableA(long ptr long)

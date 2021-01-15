@@ -4250,6 +4250,35 @@ BOOL WINAPI GetGestureInfo(HGESTUREINFO handle, PGESTUREINFO ptr)
 }
 
 /*****************************************************************************
+ *              CloseGestureInfoHandle (USER32.@)
+ */
+BOOL WINAPI CloseGestureInfoHandle(HGESTUREINFO handle)
+{
+    struct user_thread_info *thread_info = get_user_thread_info();
+
+    struct gestureinfo_data *head = thread_info->gestureinfo;
+    struct gestureinfo_data **p;
+
+    if (!handle)
+    {
+        SetLastError(ERROR_INVALID_HANDLE);
+        return 0;
+    }
+
+    for (p = &head; *p; p = &(*p)->next)
+    {
+        if ((HGESTUREINFO)*p == handle)
+        {
+            *p = (*p)->next;
+            HeapFree( GetProcessHeap(), 0, handle );
+            return TRUE;
+        }
+    }
+
+    return 0;
+}
+
+/*****************************************************************************
  *              GetWindowDisplayAffinity (USER32.@)
  */
 BOOL WINAPI GetWindowDisplayAffinity(HWND hwnd, DWORD *affinity)
